@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+dir="$(dirname "$0")"
+cabal=/usr/local/bin/cabal
+$cabal sdist 2>&1 | grep -v ^Loading | tee "$dir"/sdist.log

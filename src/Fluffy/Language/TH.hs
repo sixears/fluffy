@@ -18,7 +18,7 @@ module Fluffy.Language.TH
   ( Expish(..), Typeish(..)
   , assign, assignN, catchQ, checkBoolString, composeE, construct, constructQ
   , fnApply, fnApplyQ
-  , intE, listOfN, mAppE, mAppEQ, mComposeE
+  , infix2E, intE, listOfN, mAppE, mAppEQ, mComposeE
   , nameE, nameEQ, pprintQ, stringE, stringEQ
   , tsArrows, tupleL
   )
@@ -352,3 +352,10 @@ tupleL = _tupleL . fmap toType
 -- | given a name t, return a Type for [t]
 listOfN :: Name -> Type
 listOfN = AppT ListT . VarT
+
+-- infix2E ---------------------------------------------------------------------
+
+-- | like InfixE, but hides the maybes by not handling sections
+
+infix2E :: Exp -> Exp -> Exp -> Exp
+infix2E x op y = InfixE (Just x) op (Just y)
