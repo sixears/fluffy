@@ -16,9 +16,9 @@ helper functions for working with Template Haskell
 
 module Fluffy.Language.TH
   ( Expish(..), Typeish(..)
-  , assign, assignN, catchQ, checkBoolString, composeE, construct, constructQ
-  , fnApply, fnApplyQ
-  , infix2E, intE, listOfN, mAppE, mAppEQ, mComposeE
+  , appTIO, assign, assignN, catchQ, checkBoolString
+  , composeE, construct, constructQ, fnApply, fnApplyQ
+  , infix2E, intE, listOfN, mAppE, mAppEQ, mComposeE, mkSimpleTypedFun
   , nameE, nameEQ, pprintQ, stringE, stringEQ
   , tsArrows, tupleL
   )
@@ -32,13 +32,14 @@ import System.IO.Unsafe  ( unsafePerformIO )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH  ( Body  ( NormalB                                 )
-                            , Dec   ( ValD                                    )
-                            , Exp   ( AppE, ConE, InfixE, LitE, VarE          )
-                            , Lit   ( IntegerL, StringL                       )
+import Language.Haskell.TH  ( Body   ( NormalB                                 )
+                            , Clause ( Clause                                  )
+                            , Dec    ( FunD, SigD, ValD                        )
+                            , Exp    ( AppE, ConE, InfixE, LitE, VarE          )
+                            , Lit    ( IntegerL, StringL                       )
                             , Name
-                            , Pat   ( VarP                                    )
-                            , Type  ( AppT, ArrowT, ConT, ListT, TupleT, VarT )
+                            , Pat    ( VarP                                    )
+                            , Type   ( AppT, ArrowT, ConT, ListT, TupleT, VarT )
                             , ExpQ, PatQ
                             , appE, bindS, caseE, conE, conP
                             , doE, listE, litP, match, mkName
@@ -359,3 +360,23 @@ listOfN = AppT ListT . VarT
 
 infix2E :: Exp -> Exp -> Exp -> Exp
 infix2E x op y = InfixE (Just x) op (Just y)
+
+-- appTIO ----------------------------------------------------------------------
+
+-- | apply IO to a type, in Q world
+appTIO :: Type -> Type
+appTIO = AppT (ConT ''IO)
+
+-- mkSimpleTypedFun ------------------------------------------------------------
+
+-- | create a simple function with a type
+
+mkSimpleTypedFun :: Type   -- ^ function signature
+                 -> Name   -- ^ function name 
+                 -> [Name] -- ^ function parameter names
+                 -> Exp    -- ^ function body
+                 -> [Dec]
+mkSimpleTypedFun sig nam params body = 
+  [ SigD nam sig
+  , FunD nam [Clause (fmap VarP params) (NormalB body) []] ]
+
