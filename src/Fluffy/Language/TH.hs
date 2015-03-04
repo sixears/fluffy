@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances
-           , TemplateHaskell 
-           , TypeSynonymInstances 
+           , TemplateHaskell
+           , TypeSynonymInstances
   #-}
 
 {- |
@@ -39,17 +39,18 @@ import Language.Haskell.TH  ( Body   ( NormalB                                 )
                             , Lit    ( IntegerL, StringL                       )
                             , Name
                             , Pat    ( VarP                                    )
+                            , Ppr
                             , Type   ( AppT, ArrowT, ConT, ListT, TupleT, VarT )
-                            , ExpQ, PatQ
+                            , ExpQ, PatQ, Q
                             , appE, bindS, caseE, conE, conP
                             , doE, listE, litP, match, mkName
                             , newName, noBindS, normalB, pprint, runQ
                             , tupE, tupP, varE, varP, wildP
                             )
 
--- Fluffy ------------------------------
+-- this package --------------------------------------------
 
-import Fluffy.Text.PCRE  ( subst )
+import Fluffy.Text.PCRE  ( subst, substg )
 
 -- Typeish ---------------------------------------------------------------------
 
@@ -84,13 +85,13 @@ assignN name body = ValD (VarP name) (NormalB body) []
 
 class Expish a where
   toExp :: a -> Exp
-  
+
 instance Expish Exp where
   toExp = id
-  
+
 instance Expish Name where
   toExp = VarE
-  
+
 instance Expish String where
   toExp = VarE . mkName
 
@@ -323,12 +324,14 @@ checkBoolString f df = do
 
 -- | 'show' for ExpQ; replaces instances of readType "(.*)" "(.*)" :: \1 with $2
 
-pprintQ :: ExpQ -> String
+pprintQ :: Ppr a => Q a -> String
 pprintQ =
     subst (    "\\(Fluffy.Language.TH.Type.readType\\s+\"(.*)\"\\s+::"
             ++ "\\s+GHC.Base.String\\s+->\\s+\\1\\)\\s+\"(.*)\"")
           "$2"
   . subst "Fluffy.Language.TH.Type.readType \"(.*)\" \"(.*)\" :: \\1" "$2"
+  . substg "GHC.(?:Base|Types).(\\w+|\\$)" "$1"
+  . substg "\\n\\s+" " "
   . pprint . unsafePerformIO . runQ
 
 -- tsArrows --------------------------------------------------------------------
@@ -372,11 +375,11 @@ appTIO = AppT (ConT ''IO)
 -- | create a simple function with a type
 
 mkSimpleTypedFun :: Type   -- ^ function signature
-                 -> Name   -- ^ function name 
+                 -> Name   -- ^ function name
                  -> [Name] -- ^ function parameter names
                  -> Exp    -- ^ function body
                  -> [Dec]
-mkSimpleTypedFun sig nam params body = 
+mkSimpleTypedFun sig nam params body =
   [ SigD nam sig
   , FunD nam [Clause (fmap VarP params) (NormalB body) []] ]
 

@@ -28,14 +28,14 @@ import Data.Default  ( Default( def ) )
 
 -- lens --------------------------------
 
-import Control.Lens  ( (^.), _1, _3, makeLenses )
+import Control.Lens  ( Lens', (^.), _1, _3, makeLenses )
 
 -- template-haskell --------------------
 
 import Language.Haskell.TH  ( Body    ( NormalB )
                             , Clause  ( Clause )
                             , Con     ( RecC )
-                            , Dec     ( DataD, FunD, InstanceD )
+                            , Dec     ( DataD, FunD, InstanceD, SigD )
                             , Exp     ( AppE, ConE, InfixE, RecUpdE, VarE )
                             , ExpQ
                             , Name
@@ -88,8 +88,9 @@ mkLensedRecord :: String -> [(String, String)] -> [Name] -> Q [Dec]
 
 mkLensedRecord nam flds drvs = do
   let create_record = mkRecord nam flds drvs
-  create_lenses <- sequence . fmap (mkRLens_ . tail) . filter ((== '_') . head)
-                            $ fmap fst flds
+--  create_lenses <- sequence . fmap (mkRLens_ . tail) . filter ((== '_') . head)
+--                            $ fmap fst flds  
+  create_lenses <- sequence [ mkRLens_(tail fname) | (fname, ftype) <- flds, head fname == '_' ]
   return (create_record : concat create_lenses)
 
 -- mkLensedRecordDQ ------------------------------------------------------------
@@ -248,7 +249,17 @@ mkRLens name field = do -- [d| name ff o = fmap asn (ff $ field o)
       fmp  = AppE (AppE (VarE 'fmap) (VarE asn)) apff -- fmap asn (ff $ field o)
   return [FunD name [Clause [VarP ff, VarP o] (NormalB fmp) [asn']]]
 
--- | mkRLens, creating a lens 's' for a field of the form '_x'
+-- | mkRLens, creating a lens 's' for a field of the form '_s'
 
 mkRLens_ :: String -> Q [Dec]
 mkRLens_ name = mkRLens (mkName name) (mkName ('_' : name))
+
+
+mkRLensT :: Name -> Name -> String -> String -> Q [Dec]
+mkRLensT name field rtype ftype = do
+  fn <- mkRLens name field
+  let sig = AppT (AppT (ConT ''Lens') (ConT $ mkName ftype)) (ConT $ mkName rtype)
+  return $ SigD name sig : fn
+  
+mkRLensT_ :: String -> String -> String -> Q [Dec]
+mkRLensT_ name rtype ftype = mkRLensT (mkName name) (mkName ('_' : name)) rtype ftype
