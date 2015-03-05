@@ -131,5 +131,6 @@ test-suite record
   type:                exitcode-stdio-1.0
   main-is:             Record.hs
   hs-source-dirs:      t
-  build-depends:       base, template-haskell, test-tap,  fluffy
+  build-depends:       base, data-default, lens, template-haskell,
+                       test-tap,  fluffy
   default-language:    Haskell2010

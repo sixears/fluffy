@@ -46,6 +46,8 @@ import Language.Haskell.TH  ( Body    ( NormalB )
                             , mkName, nameBase, newName
                             )
 
+-- local packages ------------------------------------------
+
 -- Fluffy ------------------------------
 
 import Fluffy.Language.TH       ( assign, mAppE, nameE )
@@ -88,9 +90,9 @@ mkLensedRecord :: String -> [(String, String)] -> [Name] -> Q [Dec]
 
 mkLensedRecord nam flds drvs = do
   let create_record = mkRecord nam flds drvs
---  create_lenses <- sequence . fmap (mkRLens_ . tail) . filter ((== '_') . head)
---                            $ fmap fst flds  
-  create_lenses <- sequence [ mkRLens_(tail fname) | (fname, ftype) <- flds, head fname == '_' ]
+  create_lenses <- 
+    sequence [ mkRLensT_ (tail fname) ftype nam | (fname, ftype) <- flds
+                                                , head fname == '_' ]
   return (create_record : concat create_lenses)
 
 -- mkLensedRecordDQ ------------------------------------------------------------
@@ -118,8 +120,9 @@ mkLensedRecordDef nam flds drvs = do
   fdflts :: [Exp] <- sequence fdfltsq
 
   let create_record = mkRecordDef nam (zip3 fnams ftyps fdflts) drvs
-  create_lenses <- sequence . fmap (mkRLens_ . tail) . filter ((== '_') . head)
-                            $ fmap (^. _1) flds
+  create_lenses <- 
+      sequence [ mkRLensT_ (tail fname) ftype nam | (fname, ftype, _) <- flds
+                                                  , head fname == '_' ]
   return (create_record ++ concat create_lenses)
 
 -- mkDef -----------------------------------------------------------------------
