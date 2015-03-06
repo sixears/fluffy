@@ -18,9 +18,8 @@ module Fluffy.Language.TH.Record
 where
 
 -- base --------------------------------
-
-import Control.Monad  ( mapM )
-import Debug.Trace   ( trace )
+  
+import Control.Monad  ( liftM, liftM2 )
 
 -- data-default ------------------------
 
@@ -28,7 +27,7 @@ import Data.Default  ( Default( def ) )
 
 -- lens --------------------------------
 
-import Control.Lens  ( Lens', (^.), _1, _3, makeLenses )
+import Control.Lens  ( Lens', (^.), _3, over )
 
 -- template-haskell --------------------
 
@@ -43,14 +42,14 @@ import Language.Haskell.TH  ( Body    ( NormalB )
                             , Q
                             , Strict  ( NotStrict )
                             , Type    ( AppT, ConT )
-                            , mkName, nameBase, newName
+                            , mkName, newName
                             )
 
 -- local packages ------------------------------------------
 
 -- Fluffy ------------------------------
 
-import Fluffy.Language.TH       ( assign, mAppE, nameE )
+import Fluffy.Language.TH       ( assign, mAppE )
 import Fluffy.Language.TH.Type  ( strToT )
 
 --------------------------------------------------------------------------------
@@ -90,23 +89,19 @@ mkLensedRecord :: String -> [(String, String)] -> [Name] -> Q [Dec]
 
 mkLensedRecord nam flds drvs = do
   let create_record = mkRecord nam flds drvs
-  create_lenses <- 
-    sequence [ mkRLensT_ (tail fname) ftype nam | (fname, ftype) <- flds
-                                                , head fname == '_' ]
+  create_lenses <- mkRLenses nam flds
   return (create_record : concat create_lenses)
 
--- mkLensedRecordDQ ------------------------------------------------------------
+-- mkRLenses -------------------------------------------------------------------
+  
+-- | create a list of lenses onto a list of record fields
 
--- | like mkLensedRecord, but creates a "constructor" (mk...) using defaults
-
-mkLensedRecordDQ :: String -> String -> [(String, String, ExpQ)] -> [Name]
-                 -> Q [Dec]
-
-mkLensedRecordDQ nam mkNam flds drvs = do
-  create_record <- mkRecordDQ nam mkNam flds drvs
-  create_lenses <- sequence . fmap (mkRLens_ . tail) . filter ((== '_') . head)
-                            $ fmap (^. _1) flds
-  return (create_record ++ concat create_lenses)
+mkRLenses :: String             -- ^ record (data constructor) name
+          -> [(String, String)] -- ^ fields, as (field name, field type)
+          -> Q [[Dec]]          -- ^ declarations for lenses, including type sigs
+mkRLenses nam flds = 
+    sequence [ mkRLensT_ (tail fname) ftype nam | (fname, ftype) <- flds
+                                                , head fname == '_' ]
 
 -- mkLensedRecordDef -----------------------------------------------------------
 
@@ -120,9 +115,8 @@ mkLensedRecordDef nam flds drvs = do
   fdflts :: [Exp] <- sequence fdfltsq
 
   let create_record = mkRecordDef nam (zip3 fnams ftyps fdflts) drvs
-  create_lenses <- 
-      sequence [ mkRLensT_ (tail fname) ftype nam | (fname, ftype, _) <- flds
-                                                  , head fname == '_' ]
+  let _3to2 (a,b,c) = (a,b)
+  create_lenses <- mkRLenses nam (fmap _3to2 flds)
   return (create_record ++ concat create_lenses)
 
 -- mkDef -----------------------------------------------------------------------
@@ -154,29 +148,6 @@ mkRecordDef nam flds drvs =
   let mk   = mkDef "def" nam (fmap (^. _3) flds)
       inst = InstanceD [] (AppT (ConT ''Default) (ConT $ mkName nam)) [mk]
    in [ mkRecord nam (fmap (\(x,y,_) -> (x,y)) flds) drvs, inst ]
-
--- mkRecordD -------------------------------------------------------------------
-
--- | like mkRecord, but creates a "constructor" (mk...) using defaults
-
-mkRecordD :: String -> String -> [(String, String, Exp)] -> [Name] -> [Dec]
-mkRecordD nam mkNam flds drvs =
-  let mk = mkDef mkNam nam (fmap (^. _3) flds)
-   in [ mkRecord nam (fmap (\(x,y,_) -> (x,y)) flds) drvs, mk ]
-
-
--- mkRecordDQ ------------------------------------------------------------------
-
--- | Q variant of mkRecordD: takes ExpQs for defaults (thus Oxford
---   Brackets ([| ... |]) work; returns a Q [Dec] thus may be spliced directly
-
-mkRecordDQ :: String -> String -> [(String, String, ExpQ)] -> [Name]
-                 -> Q [Dec]
-
-mkRecordDQ nam mkNam flds drvs = do
-  dflts :: [Exp] <- mapM (^. _3) flds
-  let args :: [(String, String, Exp)] = zipWith (\(a,b,_) x -> (a,b,x)) flds dflts
-  return $ mkRecordD nam mkNam args drvs
 
 -- rConstruct ------------------------------------------------------------------
 
@@ -265,4 +236,4 @@ mkRLensT name field rtype ftype = do
   return $ SigD name sig : fn
   
 mkRLensT_ :: String -> String -> String -> Q [Dec]
-mkRLensT_ name rtype ftype = mkRLensT (mkName name) (mkName ('_' : name)) rtype ftype
+mkRLensT_ name = mkRLensT (mkName name) (mkName ('_' : name))

@@ -23,8 +23,6 @@ import Fluffy.Text.PCRE           ( substg )
 
 --------------------------------------------------------------------------------
 
-$( mkLensedRecord "R1" [ ( "_i1", "Int" ) ] [] )
-
 main :: IO ()
 main =
   test [ is (substg "\\b(ff|o|asn|s)_\\d+\\b" "$1" . pprintQ $
