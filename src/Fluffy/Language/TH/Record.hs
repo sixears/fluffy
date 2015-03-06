@@ -232,7 +232,7 @@ mkRLens_ name = mkRLens (mkName name) (mkName ('_' : name))
 mkRLensT :: Name -> Name -> String -> String -> Q [Dec]
 mkRLensT name field rtype ftype = do
   fn <- mkRLens name field
-  let sig = AppT (AppT (ConT ''Lens') (ConT $ mkName ftype)) (ConT $ mkName rtype)
+  let sig = AppT (AppT (ConT ''Lens') (strToT ftype)) (strToT rtype)
   return $ SigD name sig : fn
   
 mkRLensT_ :: String -> String -> String -> Q [Dec]

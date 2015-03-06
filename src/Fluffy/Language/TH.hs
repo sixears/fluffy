@@ -331,6 +331,7 @@ pprintQ =
           "$2"
   . subst "Fluffy.Language.TH.Type.readType \"(.*)\" \"(.*)\" :: \\1" "$2"
   . substg "GHC.(?:Base|Types).(\\w+|\\$)" "$1"
+  . substg "\\bData\\.Maybe\\.(Maybe)\\b" "$1"
   . substg "\\n\\s+" " "
   . pprint . unsafePerformIO . runQ
 

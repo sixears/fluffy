@@ -28,18 +28,24 @@ main =
   test [ is (substg "\\b(ff|o|asn|s)_\\d+\\b" "$1" . pprintQ $
                mkLensedRecord "R"
                               -- last item deliberately not prefixed with '_'
-                              [ ("_i", "Int"), ("_t", "String"), ("f","Float") ]
+                              [ ("_i", "Int")
+                              , ("_t", "Maybe String")
+                              , ("f","Float") 
+                              ]
                               [ ''Show ])
             (substg "\\b(ff|o|asn|s|t)_\\d+\\b" "$1" .
              substg "\\b(_?[iRtf])(?:_\\d)\\b" "$1" $
-               pprintQ [d| data R = R { _i :: Int, _t :: String, f :: Float }
+               pprintQ [d| data R = R { _i :: Int
+                                      , _t :: Maybe String
+                                      , f  :: Float 
+                                      }
                               deriving Show
 
                            i :: Lens' R Int
                            i ff o = fmap asn (ff $ _i o)
                              where asn s = o { _i = s }
 
-                           t :: Lens' R String
+                           t :: Lens' R (Maybe String)
                            t ff o = fmap asn (ff $ _t o)
                              where asn s = o { _t = s }
                          |])
@@ -48,14 +54,16 @@ main =
                mkLensedRecordDef "R"
                               -- last item deliberately not prefixed with '_'
                               [ ("_i", "Int"   , [| 7 |])
-                              , ("_t", "String", [| "foo" |])
+                              , ("_t", "Maybe String", [| "foo" |])
                               , ("c" , "Char"  , [| 'w' |])
                               ]
                               [ ''Show ])
             (substg "\\b(ff|o|asn|s|t)_\\d+\\b" "$1" .
              substg "Data.Default.Class.def" "def"   .
              substg "\\b(_?[iRtc])(?:_\\d)\\b" "$1" $
-               pprintQ [d| data R = R { _i :: Int, _t :: String, c :: Char }
+               pprintQ [d| data R = R { _i :: Int
+                                      , _t :: Maybe String
+                                      , c  :: Char }
                              deriving Show
 
                            instance Default R where
@@ -65,7 +73,7 @@ main =
                            i ff o = fmap asn (ff $ _i o)
                              where asn s = o { _i = s }
 
-                           t :: Lens' R String
+                           t :: Lens' R (Maybe String)
                            t ff o = fmap asn (ff $ _t o)
                              where asn s = o { _t = s }
                          |])
