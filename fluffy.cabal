@@ -47,6 +47,8 @@ cabal-version:       >=1.10
 
 
 library
+  ghc-options:         -O2 -W -Wall -fhelpful-errors
+
   -- Modules exported by the library.
   exposed-modules: Fluffy.Control.Lens,
                    Fluffy.Data.AList,

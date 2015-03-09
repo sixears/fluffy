@@ -17,9 +17,11 @@ where
 
 -- base --------------------------------
 
-import Data.Char    ( isAlpha )
-import Text.Read    ( read )
-import Text.Printf  ( printf )
+import Control.Monad  ( when )
+import Data.Char      ( isAlpha )
+import Data.List      ( isInfixOf )
+import Text.Read      ( read )
+import Text.Printf    ( printf )
 
 -- template-haskell --------------------
 
@@ -103,13 +105,14 @@ import Fluffy.Language.TH  ( nameE, stringE )
 -- strToT "?Int"  --> AppT (ConT Data.Maybe.Maybe) (ConT Int)
 
 strToT :: String -> Type
+
 strToT ('[' : str)
   | last str == ']' = AppT ListT (strToT (init str))
   | otherwise       = error $ "trailing ']' not found: '[" ++ str ++ "'"
 strToT ('?' : str)  = AppT (ConT ''Maybe) (strToT str)
 strToT str
-  | not (null str) && isAlpha (head str) 
-               = let (a,b) = span (\c -> isAlpha c || c == '.') str
+  | not (null str) && isAlpha (head str)
+               = let (a,b) = span (\c -> isAlpha c || c `elem` "._") str
                   in case dropWhile (== ' ') b of
                        "" -> ConT $ mkName a
                        b' -> AppT (ConT $ mkName a) (strToT b')

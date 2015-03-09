@@ -19,7 +19,7 @@ where
 
 -- base --------------------------------
   
-import Control.Monad  ( liftM, liftM2 )
+import Control.Monad  ( liftM, liftM2, when )
 
 -- data-default ------------------------
 
@@ -79,7 +79,7 @@ mkRecord name flds drvs =
   let qname = mkName name
    in DataD [] qname []
             [RecC qname (fmap (\(n,t) -> (mkName n, NotStrict, strToT t)) flds)]
-            drvs
+                   drvs
 
 -- mkLensedRecord --------------------------------------------------------------
 

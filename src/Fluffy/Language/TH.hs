@@ -327,7 +327,7 @@ checkBoolString f df = do
 pprintQ :: Ppr a => Q a -> String
 pprintQ =
     subst (    "\\(Fluffy.Language.TH.Type.readType\\s+\"(.*)\"\\s+::"
-            ++ "\\s+GHC.Base.String\\s+->\\s+\\1\\)\\s+\"(.*)\"")
+            ++ "\\s+String\\s+->\\s+\\1\\)\\s+\"(.*)\"")
           "$2"
   . subst "Fluffy.Language.TH.Type.readType \"(.*)\" \"(.*)\" :: \\1" "$2"
   . substg "GHC.(?:Base|Types).(\\w+|\\$)" "$1"
