@@ -17,29 +17,18 @@ where
 
 -- base --------------------------------
 
-import Control.Monad  ( when )
 import Data.Char      ( isAlpha )
-import Data.List      ( isInfixOf )
-import Text.Read      ( read )
 import Text.Printf    ( printf )
 
 -- template-haskell --------------------
 
-import Language.Haskell.TH  ( Body  ( NormalB )
-                            , Exp   ( AppE, CaseE, InfixE, LamE, LitE, SigE
+import Language.Haskell.TH  ( Exp   ( AppE, LamE, SigE
                                     , VarE )
-                            , Lit   ( StringL )
-                            , Match ( Match )
-                            , Name
-                            , Pat   ( ListP, LitP, TupP, VarP )
-                            , Type  ( AppT, ConT, ListT, TupleT )
+                            , Pat   ( VarP )
+                            , Type  ( AppT, ConT, ListT )
                             , ExpQ
                             , mkName, newName
                             )
--- Fluffy ------------------------------
-
-import Fluffy.Data.List    ( splitOn )
-import Fluffy.Language.TH  ( nameE, stringE )
 
 --------------------------------------------------------------------------------
 

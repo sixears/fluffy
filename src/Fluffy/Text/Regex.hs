@@ -12,10 +12,6 @@ module Fluffy.Text.Regex
   ( reFold, rePair, reTriple )
 where
 
--- base --------------------------------
-  
-import Debug.Trace  ( trace )
-
 -- regex-applicative -------------------
 
 import Text.Regex.Applicative  ( RE, findLongestPrefix )
@@ -34,9 +30,9 @@ reFold :: Show s => p               -- ^ initial object
 reFold p res s =
   foldl f (p, s) res
   where -- f :: (p, [s]) -> RE s (p -> p) -> (p, [s])
-        f (p, ss) r = case findLongestPrefix r ss of
-                        Just (pt, ss') -> (pt p, ss')
-                        Nothing        -> (p, ss)
+        f (p', ss) r = case findLongestPrefix r ss of
+                        Just (pt, ss') -> (pt p', ss')
+                        Nothing        -> (p', ss)
 
 -- rePair ----------------------------------------------------------------------
 

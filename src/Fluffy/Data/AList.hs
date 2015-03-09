@@ -38,7 +38,6 @@ alist_by_key as =
       d      = Map.fromListWith (flip Set.union) as'
       -- dups is the set of keys that have two or more values
       -- dups  :: [(k, Set.Set v)]
-      dups   = Map.toList $ Map.filter (\os -> Set.size os > 1) d
    in over (traverse._2) Set.toList (Map.toList d)
 
 -- alist_dups ------------------------------------------------------------------

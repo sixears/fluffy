@@ -30,7 +30,6 @@ where
 -- base --------------------------------
 
 import Data.Char        ( isNumber )
-import Debug.Trace      ( trace )
 
 -- array -------------------------------
 

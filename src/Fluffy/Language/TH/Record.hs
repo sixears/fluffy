@@ -17,17 +17,14 @@ module Fluffy.Language.TH.Record
   ( mkLensedRecord, mkLensedRecordDef )
 where
 
--- base --------------------------------
-  
-import Control.Monad  ( liftM, liftM2, when )
 
 -- data-default ------------------------
 
-import Data.Default  ( Default( def ) )
+import Data.Default  ( Default )
 
 -- lens --------------------------------
 
-import Control.Lens  ( Lens', (^.), _3, over )
+import Control.Lens  ( Lens', (^.), _3 )
 
 -- template-haskell --------------------
 
@@ -93,13 +90,13 @@ mkLensedRecord nam flds drvs = do
   return (create_record : concat create_lenses)
 
 -- mkRLenses -------------------------------------------------------------------
-  
+
 -- | create a list of lenses onto a list of record fields
 
 mkRLenses :: String             -- ^ record (data constructor) name
           -> [(String, String)] -- ^ fields, as (field name, field type)
           -> Q [[Dec]]          -- ^ declarations for lenses, including type sigs
-mkRLenses nam flds = 
+mkRLenses nam flds =
     sequence [ mkRLensT_ (tail fname) ftype nam | (fname, ftype) <- flds
                                                 , head fname == '_' ]
 
@@ -115,7 +112,7 @@ mkLensedRecordDef nam flds drvs = do
   fdflts :: [Exp] <- sequence fdfltsq
 
   let create_record = mkRecordDef nam (zip3 fnams ftyps fdflts) drvs
-  let _3to2 (a,b,c) = (a,b)
+  let _3to2 (a,b,_) = (a,b)
   create_lenses <- mkRLenses nam (fmap _3to2 flds)
   return (create_record ++ concat create_lenses)
 
@@ -223,17 +220,19 @@ mkRLens name field = do -- [d| name ff o = fmap asn (ff $ field o)
       fmp  = AppE (AppE (VarE 'fmap) (VarE asn)) apff -- fmap asn (ff $ field o)
   return [FunD name [Clause [VarP ff, VarP o] (NormalB fmp) [asn']]]
 
--- | mkRLens, creating a lens 's' for a field of the form '_s'
+-- mkRLensT --------------------------------------------------------------------
 
-mkRLens_ :: String -> Q [Dec]
-mkRLens_ name = mkRLens (mkName name) (mkName ('_' : name))
-
+-- | mkRLens, plus a pre-declared type-signature
 
 mkRLensT :: Name -> Name -> String -> String -> Q [Dec]
 mkRLensT name field rtype ftype = do
   fn <- mkRLens name field
   let sig = AppT (AppT (ConT ''Lens') (strToT ftype)) (strToT rtype)
   return $ SigD name sig : fn
-  
+
+-- mkRLensT_ -------------------------------------------------------------------
+
+-- | mkRLensT, creating a lens 's' for a field of the form '_s'
+
 mkRLensT_ :: String -> String -> String -> Q [Dec]
 mkRLensT_ name = mkRLensT (mkName name) (mkName ('_' : name))
