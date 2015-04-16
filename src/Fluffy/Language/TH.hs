@@ -17,7 +17,7 @@ helper functions for working with Template Haskell
 module Fluffy.Language.TH
   ( Expish(..), Typeish(..)
   , appTIO, assign, assignN, catchQ, checkBoolString
-  , composeE, construct, constructQ, fnApply, fnApplyQ
+  , composeE, composeApE, construct, constructQ, fnApply, fnApplyQ
   , infix2E, intE, listOfN, mAppE, mAppEQ, mComposeE, mkSimpleTypedFun
   , nameE, nameEQ, pprintQ, stringE, stringEQ
   , tsArrows, tupleL
@@ -205,6 +205,13 @@ mAppEQ = fmap mAppE . sequence -- fmap == liftM
 
 composeE :: Exp -> Exp -> Exp
 composeE a b = InfixE (Just a) (VarE '(.)) (Just b)
+
+-- composeE --------------------------------------------------------------------
+
+-- | compose two expressions using @$@
+
+composeApE :: Exp -> Exp -> Exp
+composeApE a b = InfixE (Just a) (VarE '($)) (Just b)
 
 -- mComposeE -------------------------------------------------------------------
 
