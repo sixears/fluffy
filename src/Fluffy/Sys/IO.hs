@@ -10,7 +10,7 @@ miscellaneous I/O functions
  -}
 
 module Fluffy.Sys.IO
-  ( devnullRO, ePutStrLn, ePutStrLns, putLn, touch )
+  ( devnullRO, ePutStrLn, ePutStrLns, putLn, touch, warn )
 where
 
 -- base --------------------------------
@@ -48,6 +48,13 @@ devnullRO = openFile devnull ReadMode
 
 ePutStrLn :: String -> IO()
 ePutStrLn  = hPutStrLn stderr
+
+-- warn --------------------------------
+
+-- | write line (with an added newline) to stderr
+
+warn :: String -> IO()
+warn  = hPutStrLn stderr
 
 -- ePutStrLns --------------------------
 

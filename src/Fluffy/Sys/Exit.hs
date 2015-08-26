@@ -10,52 +10,102 @@ standard process exit codes
  -}
 
 module Fluffy.Sys.Exit
-  ( exit, exitAbnormal
-  , exitIORead
-  , exitUsage
-  , exitUtility
+  ( Die
+  , die, exit, exExit
+  , eUsage, eUtility
+  , exitAbnormal, exitIORead, exitUsage, exitUtility
+  , handleDie
   )
 where
 
-import System.Exit  ( ExitCode( ExitFailure )
-                    , exitSuccess, exitWith
-                    )
+-- base --------------------------------
 
--- exit ------------------------------------------------------------------------
+import Data.Word          ( Word8 )
+import Control.Exception  ( Exception )
+import System.Exit        ( ExitCode( ExitFailure )
+                          , exitSuccess, exitWith
+                          )
+
+-- exceptions --------------------------
+
+import Control.Monad.Catch  ( MonadThrow, handle, throwM )
+
+-- Fluffy ------------------------------
+
+import Fluffy.Sys.IO  ( warn )
+
+--------------------------------------------------------------------------------
+
+-- exit --------------------------------
 
 -- | akin to C's _exit(int); exit process with a given value
 
-exit :: Int -> IO a
+exit :: Word8 -> IO a
 exit 0 = exitSuccess
-exit e = _exit e
+exit e = exitWith . ExitFailure . fromEnum $ e
 
-_exit :: Int -> IO a
-_exit = exitWith . ExitFailure
 
 -- exitAbnormal ------------------------
 
--- | exit; all worked, but got an unusual conclusion (e.g., grep found nothing) 
+-- | exit; all worked, but got an unusual conclusion (e.g., grep found nothing)
 
 exitAbnormal :: IO a
-exitAbnormal  = _exit 1
+exitAbnormal = exit 1
 
 -- exitUtility -------------------------
 
 -- | exit; because a utility function (e.g., --help) was invoked
 
+eUtility :: Word8
+eUtility = 3
 exitUtility :: IO a
-exitUtility   = _exit 2
+exitUtility = exit eUtility
 
 -- exitUsage ---------------------------
 
 -- | exit; due to a user error invoking the program
 
+eUsage :: Word8
+eUsage = 2
+
 exitUsage :: IO a
-exitUsage     = _exit 3
+exitUsage = exit eUsage
 
 -- exitIORead --------------------------
 
 -- | exit; due to an IO read failure
 
 exitIORead :: IO a
-exitIORead    = _exit 4
+exitIORead = exit 4
+
+-- Die -------------------------------------------------------------------------
+
+data Die = Die Word8 String
+
+instance Show Die where
+  show (Die _ s) = s
+
+instance Exception Die
+
+-- die ---------------------------------
+
+die :: MonadThrow m => Word8 -> String -> m a
+die i s = throwM (Die i s)
+
+-- handleDie ---------------------------
+
+-- | place this at the head of main to exit from Die throws, e.g.,
+--
+-- > main = handleDie $ do
+-- >   ...
+
+handleDie :: IO () -> IO ()
+handleDie = handle h
+  where h (Die i s) = exExit i s
+
+-- exExit ------------------------------
+
+-- | exit with an error message and a defined exit code
+
+exExit :: Word8 -> String -> IO a
+exExit i s = warn s >> exit i

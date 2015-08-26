@@ -16,9 +16,10 @@ String-specific utility functions
 
 module Fluffy.Data.String
   ( TrOptions
-  , lc, lcfirst, lines'
+  , chomp, lc, lcfirst, lines'
   , strip, stripEnd
-  , uc, ucfirst, unlines' )
+  , uc, ucfirst, unlines'
+  )
 where
 
 import Data.Char      ( isSpace, toLower, toUpper )
@@ -102,5 +103,12 @@ stripEnd = reverse . dropWhile isSpace . reverse
 
 strip :: String -> String
 strip = dropWhile isSpace . stripEnd
+
+-- chomp -----------------------------------------------------------------------
+
+-- | remove all carriage returns & newlines from string end
+
+chomp :: String -> String
+chomp = reverse . dropWhile (`elem` "\r\n") . reverse
 
 --------------------------------------------------------------------------------

@@ -20,7 +20,7 @@ import qualified Data.Set as Set
 
 -- lens --------------------------------
 
-import Control.Lens  ( over, traverse, _2 )
+import Control.Lens  ( over, _2 )
 
 -- alist_by_key ----------------------------------------------------------------
 
