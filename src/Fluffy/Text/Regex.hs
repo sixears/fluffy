@@ -9,12 +9,18 @@ helper functions for working with regexen
 
  -}
 module Fluffy.Text.Regex
-  ( reFold, rePair, reTriple )
+  ( frac, reFold, rePair, reTriple )
 where
 
+-- base --------------------------------
+
+import Control.Applicative  ( optional )
+import Data.Char            ( isDigit )
+import Data.Maybe           ( fromMaybe )
+  
 -- regex-applicative -------------------
 
-import Text.Regex.Applicative  ( RE, findLongestPrefix )
+import Text.Regex.Applicative  ( RE, findLongestPrefix, many, psym, sym )
 
 --------------------------------------------------------------------------------
 
@@ -70,3 +76,19 @@ reTriple (r1, r2, r3) s =
             Nothing       -> (Just (t1, Just (t2, Nothing)), s2)
         Nothing       -> (Just (t1, Nothing), s1)
     Nothing       -> (Nothing, s)
+
+-- frac ------------------------------------------------------------------------
+
+-- | parse fractional value (rendered as a decimal value)
+--   values with no leading digits (e.g., @.76@) are parsed
+
+frac :: (Read a, Fractional a) => RE Char a
+frac =
+  let digits :: RE Char String
+      digits = many $ psym isDigit
+      -- prefix with zero to handle numbers with no leading digit (read doesn't
+      -- like '.76', but is perfectly happy with 08.76 meaning 8.76)
+      combine :: String -> Maybe String -> String
+      combine a b = '0' : (a ++ fromMaybe [] b)
+   in read <$> (combine <$> digits <*> optional ((:) <$> (sym '.') <*> digits))
+

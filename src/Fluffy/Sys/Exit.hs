@@ -11,7 +11,7 @@ standard process exit codes
 
 module Fluffy.Sys.Exit
   ( Die
-  , die, exit, exExit
+  , die, dieInternal, dieParse, exit, exExit
   , eUsage, eUtility
   , exitAbnormal, exitIORead, exitUsage, exitUtility
   , handleDie
@@ -78,6 +78,18 @@ exitUsage = exit eUsage
 exitIORead :: IO a
 exitIORead = exit 4
 
+-- exitParse ---------------------------
+
+-- | exit; due to a parse failure
+
+eParse :: Word8
+eParse = 5
+
+-- exitInternal ------------------------
+
+eInternal :: Word8
+eInternal = 254
+
 -- Die -------------------------------------------------------------------------
 
 data Die = Die Word8 String
@@ -91,6 +103,12 @@ instance Exception Die
 
 die :: MonadThrow m => Word8 -> String -> m a
 die i s = throwM (Die i s)
+
+dieParse :: MonadThrow m => String -> m a
+dieParse = die eParse
+
+dieInternal :: MonadThrow m => String -> m a
+dieInternal = die eInternal
 
 -- handleDie ---------------------------
 
