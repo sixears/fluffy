@@ -8,7 +8,6 @@ where
 
 import Control.Applicative  ( optional )
 import Data.Maybe           ( catMaybes )
-import Data.Word            ( Word32 )
 import Text.Printf          ( printf )
 
 -- lens --------------------------------
@@ -22,7 +21,6 @@ import Text.Regex.Applicative.Common  ( decimal )
 
 -- time --------------------------------
 
-import Data.Time.Clock  ( DiffTime )
 import Data.Time.Format ( FormatTime, defaultTimeLocale, formatTime )
 
 --------------------------------------------------------------------------------
@@ -47,6 +45,7 @@ timeFormatHHMM  = formatTime defaultTimeLocale "%l:%M%p"
 
 -- | format a duration (# seconds) in terms of days/hours/mins/secs as necessary
 
+{-# ANN module "HLint: ignore Use =<<" #-}
 timeFormatDuration :: Integral n => n -> String
 timeFormatDuration dur = let s' = toInteger dur
                              (m', s) = s' `quotRem` 60
@@ -54,7 +53,7 @@ timeFormatDuration dur = let s' = toInteger dur
                              (d,  h) = h'  `quotRem` 24
                              dhms    = [(d,'d'),(h,'h'),(m,'m'),(s,'s')]
                              trim0   = dropWhile ((== 0) . (^. _1))
-                             times   = reverse $ trim0 $ reverse $ trim0 dhms
+                             times   = reverse . trim0 . reverse $ trim0 dhms
                              pp :: (Integer,Char) -> String
                              pp (i,c) = printf "%02d%c" i c
                           in case times of
@@ -67,9 +66,9 @@ timeFormatDuration dur = let s' = toInteger dur
 timeScanDuration :: (Num n) => String -> Maybe n
 timeScanDuration s =
   let l4 a b c d = sum $ catMaybes [a,b,c,d]
-      re = l4 <$> (optional (fmap (*(24*60*60)) (decimal <* string "d")))
-              <*> (optional (fmap (*(60*60))    (decimal <* string "h")))
-              <*> (optional (fmap (*60)         (decimal <* string "m")))
-              <*> (optional                     (decimal <* string "s"))
+      re = l4 <$> optional (fmap (*(24*60*60)) (decimal <* string "d"))
+              <*> optional (fmap (*(60*60))    (decimal <* string "h"))
+              <*> optional (fmap (*60)         (decimal <* string "m"))
+              <*> optional                     (decimal <* string "s")
    in s =~ re
 --------------------------------------------------------------------------------

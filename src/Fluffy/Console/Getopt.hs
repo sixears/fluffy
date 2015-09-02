@@ -28,7 +28,7 @@ import Control.Monad.IO.Class  ( MonadIO, liftIO )
 
 -- Fluffy ------------------------------
 
-import Fluffy.Sys.Exit  ( die, dieInternal, eUsage, eUtility )
+import Fluffy.Sys.Exit  ( die, eUsage, eUtility )
 
 --------------------------------------------------------------------------------
 

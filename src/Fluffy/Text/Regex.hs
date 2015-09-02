@@ -90,5 +90,5 @@ frac =
       -- like '.76', but is perfectly happy with 08.76 meaning 8.76)
       combine :: String -> Maybe String -> String
       combine a b = '0' : (a ++ fromMaybe [] b)
-   in read <$> (combine <$> digits <*> optional ((:) <$> (sym '.') <*> digits))
+   in read <$> (combine <$> digits <*> optional ((:) <$> sym '.' <*> digits))
 
