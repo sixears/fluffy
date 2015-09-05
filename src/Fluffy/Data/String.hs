@@ -17,14 +17,16 @@ String-specific utility functions
 module Fluffy.Data.String
   ( TrOptions
   , chomp, lc, lcfirst, lines'
-  , strip, stripEnd
+  , trim, trimBegin, trimEnd
   , uc, ucfirst, unlines'
   )
 where
 
 import Data.Char      ( isSpace, toLower, toUpper )
 import Data.Default   ( Default( def ) )
-import Data.List      ( intercalate )
+import Data.List      ( dropWhileEnd, intercalate )
+
+import Fluffy.Data.List  ( stripBy )
 
 -- TrOptions -------------------------------------------------------------------
 
@@ -90,19 +92,26 @@ unlines' = intercalate "\n"
 --              then take (n - length r) s ++ r
 --              else s
 
--- stripEnd --------------------------------------------------------------------
+-- trimBegin -------------------------------------------------------------------
 
 -- | remove whitespace from the end of a string
 
-stripEnd :: String -> String
-stripEnd = reverse . dropWhile isSpace . reverse 
+trimBegin :: String -> String
+trimBegin = dropWhile isSpace
 
--- strip -----------------------------------------------------------------------
+-- trimEnd ---------------------------------------------------------------------
+
+-- | remove whitespace from the end of a string
+
+trimEnd :: String -> String
+trimEnd = dropWhileEnd isSpace
+
+-- trim ------------------------------------------------------------------------
 
 -- | remove whitespace from start & end of a string
 
-strip :: String -> String
-strip = dropWhile isSpace . stripEnd
+trim :: String -> String
+trim = stripBy isSpace
 
 -- chomp -----------------------------------------------------------------------
 

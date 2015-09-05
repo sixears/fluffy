@@ -21,7 +21,8 @@ where
 
 -- base --------------------------------
 
-import Data.List   ( isInfixOf, isPrefixOf )
+import Data.List      ( dropWhileEnd, isInfixOf, isPrefixOf )
+import Data.Maybe     ( isJust )
 
 -- Diff --------------------------------
 
@@ -99,10 +100,10 @@ splitOnL sublist list
 
 -- stripBy ---------------------------------------------------------------------
 
--- | strip items that match some predicate from both ends of a string
+-- | strip items that match some predicate from both ends of a list
 
 stripBy :: (a -> Bool) -> [a] -> [a]
-stripBy p = reverse . dropWhile p . reverse . dropWhile p
+stripBy p = dropWhileEnd p . dropWhile p
 
 -- stripOn ---------------------------------------------------------------------
 
@@ -113,8 +114,8 @@ stripOn = stripBy . (==)
 
 -- stripPre --------------------------------------------------------------------
 
-{- | use the first list as a list of items; strip any consecutive such items
-     from the second list
+{- | use the first list as a list of items; strip any items that are elements of
+     that list from the beginning of the second list
 -}
 stripPre :: Eq a => [a] -> [a] -> [a]
 stripPre = dropWhile . flip elem
@@ -182,9 +183,9 @@ tr1 x y = fmap (\z -> if x == z then y else z)
 --   by mapping to Maybe, with Nothing filling out any spaces
 
 zipWithL :: (Maybe a -> Maybe b -> c) -> [a] -> [b] -> [c]
-zipWithL f as bs = if length as > length bs
-             then zipWith f (fmap Just as) (fmap Just bs ++ repeat Nothing)
-             else zipWith f (fmap Just as ++ repeat Nothing) (fmap Just bs)
+zipWithL f as bs =
+    fmap (uncurry f) . takeWhile (\(a,b) -> isJust a || isJust b) $
+      zip (fmap Just as ++ repeat Nothing) (fmap Just bs ++ repeat Nothing)
 
 -- isSublistOf -------------------------------------------------------------
 

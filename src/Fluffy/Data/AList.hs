@@ -34,8 +34,10 @@ import Control.Lens  ( _1, view )
 -- | group items in an alist by common key
 
 alist_by_key :: (Ord k) => [(k, v)] -> [(k, [v])]
-alist_by_key = map squeesh . groupBy ((==) `on` view _1) . sortBy (comparing $ view _1)
-                 where squeesh ((k,v0) : kvs) = (k, v0 : map snd kvs)
+alist_by_key =
+  map squeesh . groupBy ((==) `on` view _1) . sortBy (comparing $ view _1)
+  where squeesh ((k,v0) : kvs) = (k, v0 : map snd kvs)
+        squeesh []             = error "squeesh on an empty list"
 
 -- alist_dups ------------------------------------------------------------------
 

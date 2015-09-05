@@ -38,7 +38,7 @@ import Fluffy.Sys.IO  ( warn )
 
 -- exit --------------------------------
 
--- | akin to C's _exit(int); exit process with a given value
+-- | akin to C's exit(int); exit process with a given value
 
 exit :: Word8 -> IO a
 exit 0 = exitSuccess

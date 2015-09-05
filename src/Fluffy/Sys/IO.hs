@@ -15,9 +15,8 @@ where
 
 -- base --------------------------------
   
-import Control.Monad  ( void )
 import System.IO      ( Handle, IOMode( ReadMode, WriteMode )
-                      , hPutStrLn, openFile , stderr )
+                      , hPutStrLn, openFile, stderr, withFile )
 
 --------------------------------------------------------------------------------
 
@@ -26,7 +25,7 @@ import System.IO      ( Handle, IOMode( ReadMode, WriteMode )
 -- | create an empty file; will nuke an existing file
 
 touch :: FilePath -> IO ()
-touch fn = void $ openFile fn WriteMode
+touch fn = withFile fn WriteMode (const $ return ())
 
 -- devnull -----------------------------
 
