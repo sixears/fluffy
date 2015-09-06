@@ -8,15 +8,20 @@ License     : BSD
 Maintainer  : haskell@sixears.com
 
 ancillary functions for working with lenses
- 
+
  -}
 
 module Fluffy.Control.Lens
-  ( (~:~), (++=), (=++), lempty, prefix, prepend )
+  ( (~:~), (++=), (=++), convLens, lempty, prefix, prepend )
 where
 
-import Control.Lens  ( Lens', (%~), (&), (.~) )
+-- base --------------------------------
+
 import Control.Monad  ( MonadPlus, mplus )
+
+-- lens --------------------------------
+
+import Control.Lens   ( Lens', (%~), (&), (.~), (^.), set )
 
 --------------------------------------------------------------------------------
 
@@ -34,7 +39,7 @@ prefix l s a = (l %~ (a :)) s
 (~:~) :: MonadPlus m => Lens' s (m a) -> a -> s -> s
 l ~:~ a = l %~ (return a `mplus`)
 
--- | for some Lens' l focussed unto a list y, prepend (using ++) new list 
+-- | for some Lens' l focussed unto a list y, prepend (using ++) new list
 --   x onto y
 prepend :: Lens' s [a] -> s -> [a] -> s
 prepend l s a = (l %~ (a ++)) s
@@ -49,3 +54,12 @@ l =++ a = l %~ (a++)
 -- | set a list lens to empty
 lempty :: s -> Lens' s [a] -> s
 lempty st l = st & l .~ []
+
+-- lensLens ----------------------------
+
+-- | provide a conversion on top of a lens, by applying 'to' and 'from' fns
+convLens :: (a -> b) -> (b -> a) -> Lens' x a -> Lens' x b
+-- type Lens' s a    = Lens s s a a
+-- type Lens s t a b = Functor f => (a -> f b) -> s -> f t
+convLens aToB bToA l functor p =
+  ((p &) . set l . bToA) <$> functor (aToB (p ^. l))
