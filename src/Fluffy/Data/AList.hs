@@ -6,39 +6,36 @@ License     : BSD
 Maintainer  : haskell@sixears.com
 
 functions for association lists
- 
+
  -}
 
 module Fluffy.Data.AList
   ( alist_by_key, alist_dups )
 where
-  
+
+-- base --------------------------------
+
+import Data.Function  ( on )
+import Data.List      ( groupBy, sortBy )
+import Data.Ord       ( comparing )
+-- import Data.Tuple     ( fst )
+
 -- containers --------------------------
 
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+-- import qualified Data.Map as Map
+-- import qualified Data.Set as Set
 
 -- lens --------------------------------
 
-import Control.Lens  ( over, _2 )
+import Control.Lens  ( _1, view )
 
 -- alist_by_key ----------------------------------------------------------------
 
 -- | group items in an alist by common key
 
-alist_by_key :: (Ord k, Ord v) => -- Ord k because of Map k v
-                                -- Ord v because of Set v
-              [(k, v)] -> [(k, [v])]
-alist_by_key as =
-  let -- as' is as with singleton set values
-      -- as'   :: [(k, Set.Set v)]
-      as'    = over (traverse._2) Set.singleton as
-      -- d is a map from key to a set of values
-      -- d     :: Map.Map k (Set.Set v)
-      d      = Map.fromListWith (flip Set.union) as'
-      -- dups is the set of keys that have two or more values
-      -- dups  :: [(k, Set.Set v)]
-   in over (traverse._2) Set.toList (Map.toList d)
+alist_by_key :: (Ord k) => [(k, v)] -> [(k, [v])]
+alist_by_key = map squeesh . groupBy ((==) `on` view _1) . sortBy (comparing $ view _1)
+                 where squeesh ((k,v0) : kvs) = (k, v0 : map snd kvs)
 
 -- alist_dups ------------------------------------------------------------------
 
