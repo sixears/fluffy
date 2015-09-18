@@ -36,7 +36,7 @@ uniqKeys :: Ord a => [(a,b)] -> [a]
 uniqKeys = uniqs . map fst
 
 findVals :: (Eq a) => a -> [(a, b)] -> [b]
-findVals k = map (view _2) . filter ((==k) . (view _1)) 
+findVals k = map (view _2) . filter ((==k) . view _1)
 
 alist_props :: TestTree
 alist_props = testGroup "alist props"
